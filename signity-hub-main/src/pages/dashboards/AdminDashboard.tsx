@@ -28,9 +28,11 @@ export default function AdminDashboard() {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
+        
+        // SECURITY: Only call admin-specific APIs for admin dashboard
         const [statsResult, overviewResult] = await Promise.all([
-          getDashboardStats(),
-          getCompanyOverview()
+          getDashboardStats(), // Admin/HR only - will return 403 for others
+          getCompanyOverview() // Admin only - will return 403 for others
         ]);
         
         setStats({
@@ -43,6 +45,19 @@ export default function AdminDashboard() {
         });
       } catch (error: any) {
         console.error('Failed to fetch admin stats:', error);
+        
+        // SECURITY: Handle authorization errors gracefully
+        if (error.message.includes('Access denied') || error.message.includes('403')) {
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You don't have permission to view admin dashboard data.",
+          });
+          // Redirect to appropriate dashboard based on user role
+          navigate("/dashboard");
+          return;
+        }
+        
         toast({
           variant: "destructive",
           title: "Failed to load dashboard",
@@ -54,7 +69,7 @@ export default function AdminDashboard() {
     };
 
     fetchStats();
-  }, [toast]);
+  }, [toast, navigate]);
 
   if (isLoading) {
     return (

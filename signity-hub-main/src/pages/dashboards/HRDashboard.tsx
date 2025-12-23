@@ -26,16 +26,31 @@ export default function HRDashboard() {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
+        
+        // SECURITY: HR can access dashboard stats (HR+ level access)
         const result = await getDashboardStats();
         
         setStats({
-          totalEmployees: result.totalUsers,
-          newHires: Math.floor(result.totalUsers * 0.1), // Mock calculation
-          pendingInvitations: result.pendingInvitations,
-          departments: result.totalDepartments,
+          totalEmployees: result.stats.totalUsers,
+          newHires: result.stats.recentUsers, // Use actual recent users data
+          pendingInvitations: 0, // Will be implemented when invitations tracking is added
+          departments: 0, // Will be implemented when departments are added
         });
       } catch (error: any) {
         console.error('Failed to fetch HR stats:', error);
+        
+        // SECURITY: Handle authorization errors gracefully
+        if (error.message.includes('Access denied') || error.message.includes('403')) {
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You don't have permission to view HR dashboard data.",
+          });
+          // Redirect to appropriate dashboard based on user role
+          navigate("/dashboard");
+          return;
+        }
+        
         toast({
           variant: "destructive",
           title: "Failed to load dashboard",
@@ -47,7 +62,7 @@ export default function HRDashboard() {
     };
 
     fetchStats();
-  }, [toast]);
+  }, [toast, navigate]);
 
   if (isLoading) {
     return (
@@ -90,28 +105,32 @@ export default function HRDashboard() {
           <StatCard
             title="Total Employees"
             value={stats?.totalEmployees || 0}
-            change={5.2}
+            trend={{
+              value: 5.2,
+              isPositive: true
+            }}
             icon={Users}
             delay={0}
           />
           <StatCard
             title="New Hires (30d)"
             value={stats?.newHires || 0}
-            change={12.5}
+            trend={{
+              value: 12.5,
+              isPositive: true
+            }}
             icon={TrendingUp}
             delay={0.1}
           />
           <StatCard
             title="Pending Invitations"
             value={stats?.pendingInvitations || 0}
-            change={0}
             icon={UserPlus}
             delay={0.2}
           />
           <StatCard
             title="Departments"
             value={stats?.departments || 0}
-            change={0}
             icon={Building2}
             delay={0.3}
           />

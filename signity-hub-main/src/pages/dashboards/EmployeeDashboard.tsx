@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/stores/authStore";
+import { getEmployeeDashboard } from "@/services/dashboard.service";
 
 interface EmployeeStats {
   assignedTasks: number;
@@ -27,19 +28,30 @@ export default function EmployeeDashboard() {
       try {
         setIsLoading(true);
         
-        // Mock data for now - will be replaced with real API calls
+        // SECURITY: Call employee-specific API endpoint
+        const result = await getEmployeeDashboard();
+        
         setStats({
-          assignedTasks: 15,
-          completedTasks: 12,
-          hoursWorked: 160,
-          projectsInvolved: 2,
+          assignedTasks: result.stats.assignedTasks,
+          completedTasks: result.stats.completedTasks,
+          hoursWorked: result.stats.actualHours || 0,
+          projectsInvolved: result.stats.projectsInvolved,
         });
       } catch (error: any) {
         console.error('Failed to fetch employee stats:', error);
+        
+        // Fallback to mock data if API is not available yet
+        setStats({
+          assignedTasks: 0,
+          completedTasks: 0,
+          hoursWorked: 0,
+          projectsInvolved: 0,
+        });
+        
         toast({
-          variant: "destructive",
-          title: "Failed to load dashboard",
-          description: "Please try refreshing the page.",
+          variant: "default",
+          title: "Using Demo Data",
+          description: "Employee dashboard API is not fully implemented yet.",
         });
       } finally {
         setIsLoading(false);

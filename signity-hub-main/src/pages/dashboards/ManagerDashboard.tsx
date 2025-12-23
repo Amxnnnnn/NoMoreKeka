@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { getManagerDashboard } from "@/services/dashboard.service";
 
 interface ManagerStats {
   teamMembers: number;
@@ -27,19 +28,42 @@ export default function ManagerDashboard() {
       try {
         setIsLoading(true);
         
-        // Mock data for now - will be replaced with real API calls
+        // SECURITY: Call manager-specific API endpoint
+        const result = await getManagerDashboard();
+        
         setStats({
-          teamMembers: 8,
-          activeProjects: 3,
-          completedTasks: 24,
-          pendingTasks: 12,
+          teamMembers: result.stats.teamMembers,
+          activeProjects: result.stats.activeProjects,
+          completedTasks: result.stats.completedTasks,
+          pendingTasks: result.stats.pendingTasks,
         });
       } catch (error: any) {
         console.error('Failed to fetch manager stats:', error);
+        
+        // SECURITY: Handle authorization errors gracefully
+        if (error.message.includes('Access denied') || error.message.includes('403')) {
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: "You don't have permission to view manager dashboard data.",
+          });
+          // Redirect to appropriate dashboard based on user role
+          navigate("/dashboard");
+          return;
+        }
+        
+        // Fallback to mock data if API is not available yet
+        setStats({
+          teamMembers: 0,
+          activeProjects: 0,
+          completedTasks: 0,
+          pendingTasks: 0,
+        });
+        
         toast({
-          variant: "destructive",
-          title: "Failed to load dashboard",
-          description: "Please try refreshing the page.",
+          variant: "default",
+          title: "Using Demo Data",
+          description: "Manager dashboard API is not fully implemented yet.",
         });
       } finally {
         setIsLoading(false);
@@ -47,7 +71,7 @@ export default function ManagerDashboard() {
     };
 
     fetchStats();
-  }, [toast]);
+  }, [toast, navigate]);
 
   if (isLoading) {
     return (
@@ -90,28 +114,36 @@ export default function ManagerDashboard() {
           <StatCard
             title="Team Members"
             value={stats?.teamMembers || 0}
-            change={0}
             icon={Users}
             delay={0}
           />
           <StatCard
             title="Active Projects"
             value={stats?.activeProjects || 0}
-            change={15.3}
+            trend={{
+              value: 15.3,
+              isPositive: true
+            }}
             icon={FolderOpen}
             delay={0.1}
           />
           <StatCard
             title="Completed Tasks"
             value={stats?.completedTasks || 0}
-            change={8.2}
+            trend={{
+              value: 8.2,
+              isPositive: true
+            }}
             icon={CheckCircle}
             delay={0.2}
           />
           <StatCard
             title="Pending Tasks"
             value={stats?.pendingTasks || 0}
-            change={-5.1}
+            trend={{
+              value: 5.1,
+              isPositive: false
+            }}
             icon={Clock}
             delay={0.3}
           />
