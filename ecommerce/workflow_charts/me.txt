@@ -1,0 +1,28 @@
+GET /api/auth/me (protected)
+
+REQUEST
+│
+├── ROUTER
+│ └── matches GET /me -> authMiddleware -> errorHandler(me) -> me controller
+│
+├── MIDDLEWARE
+│ ├── authMiddleware
+│ │ ├── reads Authorization header (Bearer <token>)
+│ │ ├── verifies with jwt.verify(..., JWT_SECRET)
+│ │ ├── loads user via prismaClient.user.findUnique/findFirst (by id)
+│ │ ├── if valid -> attaches req.user = user -> next()
+│ │ └── if invalid/missing -> throw UnauthorizedException
+│ └── errorHandler(me) wrapper
+│
+├── CONTROLLER (me)
+│ ├── logs and inspects req.user
+│ ├── if !req.user -> throw UnauthorizedException (UNAUTHORIZED_EXCEPTION)
+│ └── else -> res.status(200).json({ success: true, user: req.user })
+│
+├── PRISMA / SERVICE
+│ └── user lookup performed in authMiddleware (not in me controller)
+│
+└── RESPONSE / ERROR HANDLING
+├── success: 200 JSON { success: true, user }
+├── missing/invalid token -> 401 via UnauthorizedException
+└── errors -> central error middleware

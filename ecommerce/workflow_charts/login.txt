@@ -1,0 +1,27 @@
+POST /api/auth/login
+
+REQUEST
+│
+├── ROUTER
+│ └── matches POST /login -> login controller
+│
+├── MIDDLEWARE
+│ ├── validate(loginSchema) (same validation flow)
+│ └── errorHandler(login) wrapper
+│
+├── CONTROLLER (login)
+│ ├── receives validated { email, password }
+│ ├── business logic:
+│ │ ├── prismaClient.user.findFirst({ where: { email } })
+│ │ ├── if no user -> throw NotFoundException (USER_NOT_FOUND)
+│ │ ├── compareSync(password, user.password) -> if false throw BadRequestsException (INCORRECT_PASSWORD)
+│ │ └── jwt.sign({ userId: user.id }, JWT_SECRET) -> token
+│ └── on success -> res.json({ user, token })
+│
+├── PRISMA / SERVICE
+│ └── prismaClient.user.findFirst
+│
+└── RESPONSE / ERROR HANDLING
+├── success: 200 JSON { user, token }
+├── auth failures -> thrown exceptions -> central error middleware -> proper status & message
+└── unexpected errors -> InternalException -> 500

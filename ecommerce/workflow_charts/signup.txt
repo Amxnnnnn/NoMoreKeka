@@ -1,0 +1,33 @@
+POST /api/auth/signup
+
+REQUEST
+│
+├── ROUTER (src/routes/auth.route.ts)
+│ ├── matches POST /signup
+│ └── chooses signup controller
+│
+├── MIDDLEWARE
+│ ├── validate(signupSchema)
+│ │ ├── parses req.body / req.query / req.params
+│ │ ├── runs schema.safeParse(...)
+│ │ ├── on error -> build details from result.error.issues -> return 400 JSON
+│ │ └── on success -> replace req.body with parsed data -> next()
+│ └── errorHandler(signup) (wrapper)
+│ └── wraps async controller: Promise.resolve(fn(req,res,next)).catch(next)
+│
+├── CONTROLLER (src/controller/auth.controller.ts.signup)
+│ ├── receives validated { email, password, name }
+│ ├── business logic:
+│ │ ├── prismaClient.user.findFirst({ where: { email } })
+│ │ ├── if user exists -> throw BadRequestsException (USER_ALREADY_EXIST)
+│ │ └── prismaClient.user.create({ data: { name, email, password: hashSync(password,10) } })
+│ └── on success -> res.status(201).json(createdUser)
+│
+├── PRISMA / SERVICE
+│ ├── prismaClient.user.findFirst / create
+│ └── returns user object or throws DB errors
+│
+└── RESPONSE / ERROR HANDLING
+├── success: 201 JSON user
+├── errors thrown in controller -> caught by wrapper or try/catch -> next(err)
+└── central error middleware formats custom HttpException -> JSON with status/code/message

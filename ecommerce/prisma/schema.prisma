@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  HR
+  MANAGER
+  EMPLOYEE
+}
+
+enum OTPPurpose {
+  REGISTRATION
+  LOGIN
+  EMAIL_VERIFICATION
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users       User[]
+  departments Department[]
+  invitations Invitation[]
+  teams       Team[]
+  projects    Project[]
+
+  @@map("companies")
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users   User[]
+
+  @@unique([name, companyId])
+  @@map("departments")
+}
+
+model User {
+  id              String  @id @default(uuid())
+  name            String
+  email           String  @unique
+  password        String
+  role            Role    @default(EMPLOYEE)
+  companyId       String
+  departmentId    String?
+  teamId          String?
+  isEmailVerified Boolean @default(false)
+  isActive        Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  team       Team?       @relation("TeamMembers", fields: [teamId], references: [id])
+  otps       OTP[]
+
+  // Manager relationships
+  managedTeams    Team[]    @relation("TeamManager")
+  managedProjects Project[] @relation("ProjectManager")
+
+  // Task relationships
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+
+  @@map("users")
+}
+
+model Invitation {
+  id         String           @id @default(uuid())
+  email      String
+  name       String
+  role       Role             @default(EMPLOYEE)
+  companyId  String
+  departmentId String?
+  invitedBy  String
+  status     InvitationStatus @default(PENDING)
+  token      String           @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([email, companyId])
+  @@map("invitations")
+}
+
+model OTP {
+  id        String     @id @default(uuid())
+  email     String
+  otpCode   String
+  purpose   OTPPurpose
+  isVerified Boolean   @default(false)
+  attempts   Int       @default(0)
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@map("otps")
+  @@index([email])
+  @@index([userId])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  managerId   String
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  manager     User      @relation("TeamManager", fields: [managerId], references: [id])
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  members     User[]    @relation("TeamMembers")
+  projects    Project[]
+
+  @@unique([name, companyId])
+  @@map("teams")
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  name        String
+  description String?
+  teamId      String
+  managerId   String
+  companyId   String
+  status      ProjectStatus @default(PLANNING)
+  priority    Priority      @default(MEDIUM)
+  startDate   DateTime?
+  endDate     DateTime?
+  deadline    DateTime?
+  progress    Int           @default(0)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  team        Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  manager     User    @relation("ProjectManager", fields: [managerId], references: [id])
+  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  projectId   String
+  assigneeId  String?
+  createdById String
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+  estimatedHours Int?
+  actualHours    Int?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy   User    @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@map("tasks")
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
