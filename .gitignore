@@ -1,1 +1,164 @@
-workflow
+# =============================================================================
+# Professional .gitignore for HRMS Project
+# =============================================================================
+
+# ================================
+# Environment & Security
+# ================================
+# Environment files (CRITICAL: Never commit secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# API Keys and Secrets
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+
+# ================================
+# Dependencies & Build Artifacts
+# ================================
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package manager lock files (keep package-lock.json, ignore others)
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vuepress/dist/
+
+# ================================
+# Database & Prisma
+# ================================
+# Prisma generated client (regenerated on build)
+# Keep schema.prisma and migrations/
+*.db
+*.sqlite
+*.sqlite3
+
+# ================================
+# Development Tools
+# ================================
+# IDE and Editor files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ================================
+# Logs & Temporary Files
+# ================================
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# ================================
+# Testing & Quality Assurance
+# ================================
+# Jest coverage
+coverage/
+.coverage/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ================================
+# Frontend Specific
+# ================================
+# Vite
+.vite/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# React/Next.js
+.next/
+out/
+
+# Storybook
+storybook-static/
+
+# ================================
+# Backend Specific
+# ================================
+# TypeScript build info
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# ================================
+# Deployment & CI/CD
+# ================================
+# Vercel
+.vercel/
+
+# Docker
+.dockerignore
+
+# ================================
+# Project Specific
+# ================================
+# Workflow documentation (keep for development)
+workflow/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Cache directories
+.cache/
+.parcel-cache/
+
+# ================================
+# Archive & Backup Files
+# ================================
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.bak
+*.backup
