@@ -41,6 +41,8 @@ model Company {
   invitations Invitation[]
   teams       Team[]
   projects    Project[]
+  leaveTypes  LeaveType[]
+  auditLogs   AuditLog[]
 
   @@map("companies")
 }
@@ -88,6 +90,16 @@ model User {
   // Task relationships
   assignedTasks Task[] @relation("TaskAssignee")
   createdTasks  Task[] @relation("TaskCreator")
+
+  // HRMS relationships
+  leaves           Leave[]        @relation
+  approvedLeaves   Leave[]        @relation("LeaveApprover")
+  leaveBalances    LeaveBalance[]
+  workLogs         WorkLog[]
+  approvedWorkLogs WorkLog[]      @relation("WorkLogApprover")
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  taskComments     TaskComment[]
 
   @@map("users")
 }
@@ -167,10 +179,11 @@ model Project {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  team        Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  manager     User    @relation("ProjectManager", fields: [managerId], references: [id])
-  company     Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  tasks       Task[]
+  team     Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  manager  User      @relation("ProjectManager", fields: [managerId], references: [id])
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tasks    Task[]
+  workLogs WorkLog[]
 
   @@map("projects")
 }
@@ -192,9 +205,11 @@ model Task {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignee    User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
-  createdBy   User    @relation("TaskCreator", fields: [createdById], references: [id])
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee     User?         @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy    User          @relation("TaskCreator", fields: [createdById], references: [id])
+  workLogs     WorkLog[]
+  taskComments TaskComment[]
 
   @@map("tasks")
 }
@@ -220,4 +235,187 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum WorkLogType {
+  DAILY
+  WEEKLY
+  PROJECT
+  TASK
+}
+
+enum NotificationType {
+  LEAVE_REQUEST
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  TASK_ASSIGNED
+  TASK_OVERDUE
+  PROJECT_DEADLINE
+  TEAM_UPDATE
+  SYSTEM_ALERT
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  APPROVE
+  REJECT
+  ASSIGN
+  TRANSFER
+}
+
+model LeaveType {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  defaultDays Int      @default(0)
+  companyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  leaves        Leave[]
+  leaveBalances LeaveBalance[]
+
+  @@unique([name, companyId])
+  @@map("leave_types")
+}
+
+model Leave {
+  id          String      @id @default(uuid())
+  userId      String
+  leaveTypeId String
+  startDate   DateTime
+  endDate     DateTime
+  days        Int
+  reason      String
+  status      LeaveStatus @default(PENDING)
+  approvedBy  String?
+  appliedAt   DateTime    @default(now())
+  respondedAt DateTime?
+  comments    String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+  approver  User?     @relation("LeaveApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@map("leaves")
+}
+
+model LeaveBalance {
+  id            String   @id @default(uuid())
+  userId        String
+  leaveTypeId   String
+  year          Int
+  totalDays     Int
+  usedDays      Int      @default(0)
+  remainingDays Int
+  carryForward  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, leaveTypeId, year])
+  @@map("leave_balances")
+}
+
+model WorkLog {
+  id          String      @id @default(uuid())
+  userId      String
+  projectId   String?
+  taskId      String?
+  date        DateTime
+  hoursWorked Float
+  description String
+  logType     WorkLogType @default(DAILY)
+  isApproved  Boolean     @default(false)
+  approvedBy  String?
+  approvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  task     Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  approver User?    @relation("WorkLogApprover", fields: [approvedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([date])
+  @@map("work_logs")
+}
+
+model Notification {
+  id          String           @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  type        NotificationType
+  isRead      Boolean          @default(false)
+  relatedId   String?
+  relatedType String?
+  actionUrl   String?
+  createdAt   DateTime         @default(now())
+  readAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model AuditLog {
+  id         String      @id @default(uuid())
+  userId     String?
+  action     AuditAction
+  entityType String
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  companyId  String
+  createdAt  DateTime    @default(now())
+
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  comment   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("task_comments")
 }

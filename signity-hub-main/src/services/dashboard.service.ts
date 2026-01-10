@@ -44,6 +44,24 @@ export interface CurrentUserInfo {
   joinedAt: string;
 }
 
+export interface ManagerStats {
+  teamMembers: number;
+  activeProjects: number;
+  completedTasks: number;
+  pendingTasks: number;
+  totalTasks: number;
+}
+
+export interface EmployeeStats {
+  assignedTasks: number;
+  completedTasks: number;
+  inProgressTasks: number;
+  pendingTasks: number;
+  projectsInvolved: number;
+  estimatedHours: number;
+  actualHours: number;
+}
+
 // Get dashboard statistics (HR+ Access Required)
 export const getDashboardStats = async () => {
   try {
@@ -90,51 +108,44 @@ export const getCompanyOverview = async () => {
   }
 };
 
-// Employee-specific dashboard data (minimal, secure)
-export const getEmployeeDashboard = async () => {
-  try {
-    // For employees, we only fetch their own profile data
-    const response = await api.get('/user/profile');
-    return {
-      success: true,
-      profile: response.data.user,
-      message: response.data.message
-    };
-  } catch (error: any) {
-    const errorCode = error.response?.data?.errorCode;
-    const message = errorCode ? getErrorMessage(errorCode) : error.response?.data?.message || 'Failed to fetch employee dashboard';
-    throw new Error(message);
-  }
-};
-
-// Manager-specific dashboard data
+// Manager-specific dashboard data (Manager+ Access Required)
 export const getManagerDashboard = async () => {
   try {
-    // For managers, we fetch team-related data only
-    const response = await api.get('/manager/team-stats');
+    const response = await api.get('/dashboard/manager');
     return {
       success: true,
-      teamStats: response.data.stats,
+      stats: response.data.stats as ManagerStats,
+      teams: response.data.teams,
+      projects: response.data.projects,
       message: response.data.message
     };
   } catch (error: any) {
     const errorCode = error.response?.data?.errorCode;
     const message = errorCode ? getErrorMessage(errorCode) : error.response?.data?.message || 'Failed to fetch manager dashboard';
     
-    // Fallback for when manager endpoints aren't implemented yet
-    if (error.response?.status === 404) {
-      return {
-        success: true,
-        teamStats: {
-          teamMembers: 0,
-          activeProjects: 0,
-          completedTasks: 0,
-          pendingTasks: 0
-        },
-        message: 'Manager dashboard data not available yet'
-      };
+    // Handle specific authorization errors
+    if (error.response?.status === 403) {
+      throw new Error('Access denied: Manager access required to view manager dashboard');
     }
     
+    throw new Error(message);
+  }
+};
+
+// Employee-specific dashboard data (All authenticated users)
+export const getEmployeeDashboard = async () => {
+  try {
+    const response = await api.get('/dashboard/employee');
+    return {
+      success: true,
+      stats: response.data.stats as EmployeeStats,
+      recentTasks: response.data.recentTasks,
+      projects: response.data.projects,
+      message: response.data.message
+    };
+  } catch (error: any) {
+    const errorCode = error.response?.data?.errorCode;
+    const message = errorCode ? getErrorMessage(errorCode) : error.response?.data?.message || 'Failed to fetch employee dashboard';
     throw new Error(message);
   }
 };
