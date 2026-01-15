@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const sendInvitationSchema = z.object({
     body: z.object({
-        email: z.string().email('Please enter a valid email address'),
+        email: z.email('Please enter a valid email address'),
         name: z.string().min(2, 'Name must be at least 2 characters'),
         role: z.enum(['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE']),
         departmentId: z.string().optional(),

@@ -15,6 +15,7 @@ import {
     getProjectPerformance
 } from '../controller/project.controller';
 import { authMiddleware } from '../middleware/auth.mid';
+import { companyIsolationMiddleware } from '../middleware/admin.mid';
 import { validate } from '../middleware/validate.mid';
 import { errorHandler } from '../error-handler.validator';
 import { 
@@ -25,6 +26,10 @@ import {
 } from '../validator/project.validator';
 
 const projectRoutes: Router = Router();
+
+// Apply authentication and company isolation to all routes
+projectRoutes.use(authMiddleware);
+projectRoutes.use(companyIsolationMiddleware);
 
 /**
  * @swagger
@@ -81,7 +86,7 @@ const projectRoutes: Router = Router();
  *         $ref: '#/components/responses/InternalError'
  */
 // Get all projects (role-based filtering)
-projectRoutes.get('/', authMiddleware, errorHandler(getProjects));
+projectRoutes.get('/', errorHandler(getProjects));
 
 /**
  * @swagger
@@ -114,7 +119,7 @@ projectRoutes.get('/', authMiddleware, errorHandler(getProjects));
  *         $ref: '#/components/responses/Unauthorized'
  */
 // Get assigned projects for current user
-projectRoutes.get('/assigned', authMiddleware, errorHandler(getAssignedProjects));
+projectRoutes.get('/assigned', errorHandler(getAssignedProjects));
 
 /**
  * @swagger
@@ -147,7 +152,7 @@ projectRoutes.get('/assigned', authMiddleware, errorHandler(getAssignedProjects)
  *         $ref: '#/components/responses/Unauthorized'
  */
 // Get my projects
-projectRoutes.get('/my-projects', authMiddleware, errorHandler(getMyProjects));
+projectRoutes.get('/my-projects', errorHandler(getMyProjects));
 
 /**
  * @swagger
@@ -185,7 +190,7 @@ projectRoutes.get('/my-projects', authMiddleware, errorHandler(getMyProjects));
  *         description: Only managers, HR, and admins can view managed projects
  */
 // Get managed projects (Manager/HR/Admin only)
-projectRoutes.get('/managed', authMiddleware, errorHandler(getManagedProjects));
+projectRoutes.get('/managed', errorHandler(getManagedProjects));
 
 /**
  * @swagger
@@ -242,7 +247,7 @@ projectRoutes.get('/managed', authMiddleware, errorHandler(getManagedProjects));
  *         $ref: '#/components/responses/Unauthorized'
  */
 // Get project dashboard data
-projectRoutes.get('/dashboard', authMiddleware, errorHandler(getProjectDashboard));
+projectRoutes.get('/dashboard', errorHandler(getProjectDashboard));
 
 /**
  * @swagger
@@ -311,7 +316,7 @@ projectRoutes.get('/dashboard', authMiddleware, errorHandler(getProjectDashboard
  *         description: Team not found
  */
 // Create new project (Manager/HR/Admin only)
-projectRoutes.post('/', authMiddleware, validate(createProjectSchema), errorHandler(createProject));
+projectRoutes.post('/', validate(createProjectSchema), errorHandler(createProject));
 
 /**
  * @swagger
@@ -369,7 +374,7 @@ projectRoutes.post('/', authMiddleware, validate(createProjectSchema), errorHand
  *         description: Project not found
  */
 // Get project details by ID
-projectRoutes.get('/:projectId', authMiddleware, validate(projectIdParamSchema), errorHandler(getProjectDetails));
+projectRoutes.get('/:projectId', validate(projectIdParamSchema), errorHandler(getProjectDetails));
 
 /**
  * @swagger
@@ -443,7 +448,7 @@ projectRoutes.get('/:projectId', authMiddleware, validate(projectIdParamSchema),
  *         description: Project not found
  */
 // Update project (Manager/HR/Admin only)
-projectRoutes.put('/:projectId', authMiddleware, validate(projectIdParamSchema), validate(updateProjectSchema), errorHandler(updateProject));
+projectRoutes.put('/:projectId', validate(projectIdParamSchema), validate(updateProjectSchema), errorHandler(updateProject));
 
 /**
  * @swagger
@@ -494,7 +499,7 @@ projectRoutes.put('/:projectId', authMiddleware, validate(projectIdParamSchema),
  *         description: Project not found
  */
 // Get project members
-projectRoutes.get('/:projectId/members', authMiddleware, validate(projectIdParamSchema), errorHandler(getProjectMembers));
+projectRoutes.get('/:projectId/members', validate(projectIdParamSchema), errorHandler(getProjectMembers));
 
 /**
  * @swagger
@@ -562,7 +567,7 @@ projectRoutes.get('/:projectId/members', authMiddleware, validate(projectIdParam
  *         description: Project not found
  */
 // Get project tasks
-projectRoutes.get('/:projectId/tasks', authMiddleware, validate(projectIdParamSchema), errorHandler(getProjectTasks));
+projectRoutes.get('/:projectId/tasks', validate(projectIdParamSchema), errorHandler(getProjectTasks));
 
 /**
  * @swagger
@@ -640,7 +645,7 @@ projectRoutes.get('/:projectId/tasks', authMiddleware, validate(projectIdParamSc
  *         description: Project not found
  */
 // Get project metrics
-projectRoutes.get('/:projectId/metrics', authMiddleware, validate(projectIdParamSchema), errorHandler(getProjectMetrics));
+projectRoutes.get('/:projectId/metrics', validate(projectIdParamSchema), errorHandler(getProjectMetrics));
 
 /**
  * @swagger
@@ -682,7 +687,7 @@ projectRoutes.get('/:projectId/metrics', authMiddleware, validate(projectIdParam
  *         description: Project not found
  */
 // Get project performance metrics
-projectRoutes.get('/:projectId/performance', authMiddleware, validate(projectIdParamSchema), errorHandler(getProjectPerformance));
+projectRoutes.get('/:projectId/performance', validate(projectIdParamSchema), errorHandler(getProjectPerformance));
 
 /**
  * @swagger
@@ -738,6 +743,6 @@ projectRoutes.get('/:projectId/performance', authMiddleware, validate(projectIdP
  *         description: Project or team not found
  */
 // Assign project to team (Manager/HR/Admin only)
-projectRoutes.put('/:projectId/assign', authMiddleware, validate(projectIdParamSchema), validate(assignProjectSchema), errorHandler(assignProjectToTeam));
+projectRoutes.put('/:projectId/assign', validate(projectIdParamSchema), validate(assignProjectSchema), errorHandler(assignProjectToTeam));
 
 export default projectRoutes;

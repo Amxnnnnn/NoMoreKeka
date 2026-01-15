@@ -26,8 +26,17 @@ export const createTeam = async (
     try {
         const { name, description } = req.body;
         const managerId = req.user?.id;
+        const companyId = req.companyId;
 
-        console.log('Creating team:', name, 'by manager:', managerId);
+        console.log('Creating team:', name, 'by manager:', managerId, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Check permissions
         if (!['MANAGER', 'HR', 'ADMIN'].includes(req.user?.role || '')) {
@@ -41,7 +50,7 @@ export const createTeam = async (
         const existingTeam = await prismaClient.team.findFirst({
             where: {
                 name: name,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -59,7 +68,7 @@ export const createTeam = async (
                 name: name,
                 description: description,
                 managerId: managerId!,
-                companyId: req.companyId!
+                companyId: companyId
             },
             include: {
                 manager: {
@@ -104,8 +113,17 @@ export const getManagedTeams = async (
 ) => {
     try {
         const managerId = req.user?.id;
+        const companyId = req.companyId;
 
-        console.log('Getting managed teams for:', managerId);
+        console.log('Getting managed teams for:', managerId, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Check permissions
         if (!['MANAGER', 'HR', 'ADMIN'].includes(req.user?.role || '')) {
@@ -116,7 +134,7 @@ export const getManagedTeams = async (
         }
 
         const whereClause: any = {
-            companyId: req.companyId,
+            companyId: companyId,
             isActive: true
         };
 

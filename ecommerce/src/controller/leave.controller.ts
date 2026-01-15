@@ -230,7 +230,7 @@ export const applyLeave = async (
             }
         });
 
-        // TODO: Send notification to manager/HR
+        // Jub - websockets chal jaye : Send notification to manager/HR
 
         res.json({
             success: true,

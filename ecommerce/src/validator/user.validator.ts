@@ -5,7 +5,7 @@ export const updateUserSchema = z.object({
     body: z.object({
         name: z.string().min(2, "Name must be at least 2 characters").optional(),
         email: z.email("Invalid email format").optional(),
-        role: z.enum(['ADMIN', 'HR', 'EMPLOYEE']).optional()
+        role: z.enum(['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE']).optional()
     })
 });
 
@@ -19,7 +19,7 @@ export const userIdParamSchema = z.object({
 // Role parameter schema
 export const roleParamSchema = z.object({
     params: z.object({
-        role: z.enum(['ADMIN', 'HR', 'EMPLOYEE'])
+        role: z.enum(['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'])
     })
 });
 

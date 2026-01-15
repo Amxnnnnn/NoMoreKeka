@@ -18,6 +18,31 @@ import Members from "./pages/Members";
 import InviteMembers from "./pages/InviteMembers";
 import NotFound from "./pages/NotFound";
 
+// Admin Pages
+import Departments from "./pages/admin/Departments";
+import UserManagement from "./pages/admin/UserManagement";
+import ReportsAnalytics from "./pages/admin/ReportsAnalytics";
+import SystemConfiguration from "./pages/admin/SystemConfiguration";
+
+// Manager Pages
+import ManagerTaskManagement from "./pages/manager/ManagerTaskManagement";
+import ManagerTeamManagement from "./pages/manager/ManagerTeamManagement";
+
+// Project Management
+import { ProjectManagement } from "./pages/project/ProjectManagement";
+
+// Team Management
+import TeamManagement from "./pages/team/TeamManagement";
+
+// Leave Management
+import { LeaveApplicationPage } from "./pages/leave/LeaveApplication";
+import { LeaveApprovalPage } from "./pages/leave/LeaveApproval";
+import { LeaveHistoryPage } from "./pages/leave/LeaveHistory";
+
+// Work Log Management
+import { WorkLogManagement } from "./pages/worklog/WorkLogManagement";
+import { WorkLogApproval } from "./pages/worklog/WorkLogApproval";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -78,7 +103,15 @@ const App = () => (
             } 
           />
           
-          {/* Admin-Only Routes */}
+          {/* ========== ADMIN ROUTES ========== */}
+          <Route 
+            path="/admin/departments" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <Departments />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/admin/members" 
             element={
@@ -95,8 +128,32 @@ const App = () => (
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <UserManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/reports" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <ReportsAnalytics />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/settings" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <SystemConfiguration />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* HR-Level Routes */}
+          {/* ========== HR ROUTES ========== */}
           <Route 
             path="/hr/members" 
             element={
@@ -113,8 +170,186 @@ const App = () => (
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/hr/users" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <UserManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/hr/reports" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <ReportsAnalytics />
+              </ProtectedRoute>
+            } 
+          />
           
-          {/* Legacy Routes - Redirect to role-specific routes */}
+          {/* ========== MANAGER ROUTES ========== */}
+          <Route 
+            path="/manager/tasks" 
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <ManagerTaskManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/manager/team" 
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <ManagerTeamManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/manager/projects" 
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <ProjectManagement />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* ========== PROJECT MANAGEMENT ROUTES ========== */}
+          <Route 
+            path="/projects" 
+            element={
+              <ProtectedRoute>
+                <ProjectManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/projects" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <ProjectManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/hr/projects" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <ProjectManagement />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* ========== TEAM MANAGEMENT ROUTES ========== */}
+          <Route 
+            path="/teams" 
+            element={
+              <ProtectedRoute>
+                <TeamManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/teams" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <TeamManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/hr/teams" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <TeamManagement />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* ========== LEAVE MANAGEMENT ROUTES ========== */}
+          <Route 
+            path="/leave/apply" 
+            element={
+              <ProtectedRoute>
+                <LeaveApplicationPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/leave/history" 
+            element={
+              <ProtectedRoute>
+                <LeaveHistoryPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/leave/approval" 
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <LeaveApprovalPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/leave/approval" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <LeaveApprovalPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/hr/leave/approval" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <LeaveApprovalPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* ========== WORK LOG ROUTES ========== */}
+          <Route 
+            path="/worklog" 
+            element={
+              <ProtectedRoute>
+                <WorkLogManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/worklog/approval" 
+            element={
+              <ProtectedRoute requiredRole="MANAGER">
+                <WorkLogApproval />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/worklog" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <WorkLogManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/worklog/approval" 
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <WorkLogApproval />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/hr/worklog" 
+            element={
+              <ProtectedRoute requiredRole="HR">
+                <WorkLogManagement />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* ========== LEGACY ROUTES - Redirect to role-specific routes ========== */}
           <Route 
             path="/members" 
             element={

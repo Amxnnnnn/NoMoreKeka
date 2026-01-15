@@ -111,3 +111,30 @@ export const deactivateUser = async (userId: string) => {
     throw new Error(message);
   }
 };
+
+// Activate user (Admin only)
+export const activateUser = async (userId: string) => {
+  try {
+    const response = await api.put(`/users/${userId}/activate`);
+    return {
+      success: true,
+      userId: response.data.userId,
+      message: response.data.message
+    };
+  } catch (error: any) {
+    const errorCode = error.response?.data?.errorCode;
+    const message = errorCode ? getErrorMessage(errorCode) : error.response?.data?.message || 'Failed to activate user';
+    throw new Error(message);
+  }
+};
+
+// Export as a service object for easier importing
+export const userService = {
+  getAllUsers,
+  getUserProfile,
+  getUsersByRole,
+  getUserById,
+  updateUser,
+  deactivateUser,
+  activateUser
+};

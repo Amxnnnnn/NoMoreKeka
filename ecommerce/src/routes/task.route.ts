@@ -11,6 +11,7 @@ import {
     markTaskComplete
 } from '../controller/task.controller';
 import { authMiddleware } from '../middleware/auth.mid';
+import { companyIsolationMiddleware } from '../middleware/admin.mid';
 import { validate } from '../middleware/validate.mid';
 import { errorHandler } from '../error-handler.validator';
 import { 
@@ -24,6 +25,10 @@ import {
 } from '../validator/task.validator';
 
 const taskRoutes: Router = Router();
+
+// Apply authentication and company isolation to all routes
+taskRoutes.use(authMiddleware);
+taskRoutes.use(companyIsolationMiddleware);
 
 /**
  * @swagger
@@ -85,7 +90,7 @@ const taskRoutes: Router = Router();
  *         $ref: '#/components/responses/InternalError'
  */
 // Get all tasks (with role-based filtering)
-taskRoutes.get('/', authMiddleware, validate(taskQuerySchema), errorHandler(getTasks));
+taskRoutes.get('/', validate(taskQuerySchema), errorHandler(getTasks));
 
 /**
  * @swagger
@@ -131,7 +136,7 @@ taskRoutes.get('/', authMiddleware, validate(taskQuerySchema), errorHandler(getT
  *         $ref: '#/components/responses/Unauthorized'
  */
 // Get assigned tasks for current user
-taskRoutes.get('/assigned', authMiddleware, errorHandler(getAssignedTasks));
+taskRoutes.get('/assigned', errorHandler(getAssignedTasks));
 
 /**
  * @swagger
@@ -181,7 +186,7 @@ taskRoutes.get('/assigned', authMiddleware, errorHandler(getAssignedTasks));
  *         description: Only managers, HR, and admins can view team tasks
  */
 // Get team tasks (Manager/HR/Admin only)
-taskRoutes.get('/team', authMiddleware, errorHandler(getTeamTasks));
+taskRoutes.get('/team', errorHandler(getTeamTasks));
 
 /**
  * @swagger
@@ -251,7 +256,7 @@ taskRoutes.get('/team', authMiddleware, errorHandler(getTeamTasks));
  *         description: Project not found or assignee not in project team
  */
 // Create new task (Manager/HR/Admin only)
-taskRoutes.post('/', authMiddleware, validate(createTaskSchema), errorHandler(createTask));
+taskRoutes.post('/', validate(createTaskSchema), errorHandler(createTask));
 
 /**
  * @swagger
@@ -313,7 +318,7 @@ taskRoutes.post('/', authMiddleware, validate(createTaskSchema), errorHandler(cr
  *         description: Task not found
  */
 // Update task status
-taskRoutes.put('/:taskId/status', authMiddleware, validate(taskIdParamSchema), validate(updateTaskStatusSchema), errorHandler(updateTaskStatus));
+taskRoutes.put('/:taskId/status', validate(taskIdParamSchema), validate(updateTaskStatusSchema), errorHandler(updateTaskStatus));
 
 /**
  * @swagger
@@ -369,7 +374,7 @@ taskRoutes.put('/:taskId/status', authMiddleware, validate(taskIdParamSchema), v
  *         description: Task not found or assignee not in project team
  */
 // Assign task to team member (Manager/HR/Admin only)
-taskRoutes.put('/:taskId/assign', authMiddleware, validate(taskIdParamSchema), validate(assignTaskSchema), errorHandler(assignTask));
+taskRoutes.put('/:taskId/assign', validate(taskIdParamSchema), validate(assignTaskSchema), errorHandler(assignTask));
 
 /**
  * @swagger
@@ -435,7 +440,7 @@ taskRoutes.put('/:taskId/assign', authMiddleware, validate(taskIdParamSchema), v
  *         description: Task not found
  */
 // Mark task as complete/cancelled (Manager/HR/Admin only)
-taskRoutes.put('/:taskId/complete', authMiddleware, validate(taskIdParamSchema), validate(markTaskCompleteSchema), errorHandler(markTaskComplete));
+taskRoutes.put('/:taskId/complete', validate(taskIdParamSchema), validate(markTaskCompleteSchema), errorHandler(markTaskComplete));
 
 /**
  * @swagger
@@ -492,7 +497,7 @@ taskRoutes.put('/:taskId/complete', authMiddleware, validate(taskIdParamSchema),
  *         description: Task not found
  */
 // Add task comment
-taskRoutes.post('/:taskId/comments', authMiddleware, validate(taskIdParamSchema), validate(addTaskCommentSchema), errorHandler(addTaskComment));
+taskRoutes.post('/:taskId/comments', validate(taskIdParamSchema), validate(addTaskCommentSchema), errorHandler(addTaskComment));
 
 /**
  * @swagger
@@ -534,6 +539,6 @@ taskRoutes.post('/:taskId/comments', authMiddleware, validate(taskIdParamSchema)
  *         description: Task not found
  */
 // Get task comments
-taskRoutes.get('/:taskId/comments', authMiddleware, validate(taskIdParamSchema), errorHandler(getTaskComments));
+taskRoutes.get('/:taskId/comments', validate(taskIdParamSchema), errorHandler(getTaskComments));
 
 export default taskRoutes;

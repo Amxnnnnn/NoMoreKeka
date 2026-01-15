@@ -280,6 +280,15 @@ export const companyIsolationMiddleware = async (
             ));
         }
 
+        // Validate that user has a company ID
+        if (!user.companyId) {
+            console.error(`User ${user.email} (${user.id}) does not have a companyId`);
+            return next(new UnauthorizedException(
+                'Unauthorized - User not associated with a company', 
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            ));
+        }
+
         // Add company ID to request for use in controllers
         req.companyId = user.companyId;
         

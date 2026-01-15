@@ -53,8 +53,7 @@ export default function ManagerTeamManagement() {
   useEffect(() => {
     loadTeamData();
   }, []);
-
-  const loadTeamData = async () => {
+ const loadTeamData = async () => {
     try {
       setLoading(true);
       

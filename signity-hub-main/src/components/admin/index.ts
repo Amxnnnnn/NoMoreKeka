@@ -1,4 +1,5 @@
 export { UserProfileDialog } from './UserProfileDialog';
+export { UserDetailCard } from './UserDetailCard';
 export { BulkUserActionsDialog } from './BulkUserActionsDialog';
 export { UserInviteDialog } from './UserInviteDialog';
 export { LeaveTypeManagement } from './LeaveTypeManagement';

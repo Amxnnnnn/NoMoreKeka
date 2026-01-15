@@ -19,12 +19,21 @@ export const getDashboardStats = async (
     next: NextFunction
 ) => {
     try {
-        console.log('Getting dashboard stats for company:', req.companyId);
+        const companyId = req.companyId;
+        console.log('Getting dashboard stats for company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new BadRequestsException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Get total users count
         const totalUsers = await prismaClient.user.count({
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -33,7 +42,7 @@ export const getDashboardStats = async (
         const usersByRole = await prismaClient.user.groupBy({
             by: ['role'],
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             _count: {
@@ -53,7 +62,7 @@ export const getDashboardStats = async (
 
         const recentUsers = await prismaClient.user.count({
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true,
                 createdAt: {
                     gte: sevenDaysAgo
@@ -64,7 +73,7 @@ export const getDashboardStats = async (
         // Get recent activity (last 10 users)
         const recentActivity = await prismaClient.user.findMany({
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             select: {
@@ -86,7 +95,7 @@ export const getDashboardStats = async (
 
         const previousPeriodUsers = await prismaClient.user.count({
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true,
                 createdAt: {
                     gte: fourteenDaysAgo,
@@ -138,11 +147,20 @@ export const getCompanyOverview = async (
     next: NextFunction
 ) => {
     try {
-        console.log('Getting company overview for:', req.companyId);
+        const companyId = req.companyId;
+        console.log('Getting company overview for:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new BadRequestsException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Get company details
         const company = await prismaClient.company.findUnique({
-            where: { id: req.companyId },
+            where: { id: companyId },
             select: {
                 id: true,
                 name: true,
@@ -191,15 +209,23 @@ export const getManagerDashboard = async (
     next: NextFunction
 ) => {
     try {
-        console.log('Getting manager dashboard for user:', req.user?.id);
-
         const managerId = req.user?.id;
+        const companyId = req.companyId;
+        console.log('Getting manager dashboard for user:', managerId, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new BadRequestsException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Get teams managed by this user
         const managedTeams = await prismaClient.team.findMany({
             where: {
                 managerId: managerId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -214,7 +240,7 @@ export const getManagerDashboard = async (
         const managedProjects = await prismaClient.project.findMany({
             where: {
                 managerId: managerId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -270,9 +296,17 @@ export const getEmployeeDashboard = async (
     next: NextFunction
 ) => {
     try {
-        console.log('Getting employee dashboard for user:', req.user?.id);
-
         const employeeId = req.user?.id;
+        const companyId = req.companyId;
+        console.log('Getting employee dashboard for user:', employeeId, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new BadRequestsException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Get tasks assigned to this employee
         const assignedTasks = await prismaClient.task.findMany({
@@ -296,7 +330,7 @@ export const getEmployeeDashboard = async (
         const projects = await prismaClient.project.findMany({
             where: {
                 id: { in: projectIds },
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });

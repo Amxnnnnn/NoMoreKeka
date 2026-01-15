@@ -5,17 +5,8 @@ import {
   Users, 
   UserPlus, 
   Search, 
-  Filter, 
-  MoreHorizontal, 
-  Edit, 
-  UserX, 
-  UserCheck, 
-  Mail,
-  Shield,
   Building2,
-  Calendar,
   Download,
-  Upload
 } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { DataTable, createSelectColumn, createActionsColumn, createStatusColumn } from "@/components/ui/data-table";
@@ -44,6 +35,7 @@ import { getAllDepartments, Department } from "@/services/department.service";
 import { UserProfileDialog } from "@/components/admin/UserProfileDialog";
 import { BulkUserActionsDialog } from "@/components/admin/BulkUserActionsDialog";
 import { UserInviteDialog } from "@/components/admin/UserInviteDialog";
+import { UserDetailCard } from "@/components/admin/UserDetailCard";
 
 interface ExtendedUser extends User {
   status: "active" | "inactive" | "invited";
@@ -89,6 +81,7 @@ export default function UserManagement() {
   // Dialog states
   const [selectedUser, setSelectedUser] = useState<ExtendedUser | null>(null);
   const [showUserProfile, setShowUserProfile] = useState(false);
+  const [showUserDetail, setShowUserDetail] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showDeactivateDialog, setShowDeactivateDialog] = useState(false);
@@ -152,6 +145,11 @@ export default function UserManagement() {
   }, [users, searchQuery, roleFilter, statusFilter, departmentFilter]);
 
   // Handle user actions
+  const handleViewUserDetail = (user: ExtendedUser) => {
+    setSelectedUser(user);
+    setShowUserDetail(true);
+  };
+
   const handleEditUser = (user: ExtendedUser) => {
     setSelectedUser(user);
     setShowUserProfile(true);
@@ -305,7 +303,11 @@ export default function UserManagement() {
     },
     createActionsColumn<ExtendedUser>([
       {
-        label: "View Profile",
+        label: "View Details",
+        onClick: handleViewUserDetail,
+      },
+      {
+        label: "Edit Profile",
         onClick: handleEditUser,
       },
       {
@@ -315,7 +317,7 @@ export default function UserManagement() {
         },
       },
       {
-        label: user => user.status === "active" ? "Deactivate" : "Activate",
+        label: "Deactivate",
         onClick: (user) => {
           if (user.status === "active") {
             handleDeactivateUser(user);
@@ -323,7 +325,7 @@ export default function UserManagement() {
             handleActivateUser(user);
           }
         },
-        variant: (user) => user.status === "active" ? "destructive" : "default",
+        variant: "destructive",
       },
     ]),
   ];
@@ -458,11 +460,27 @@ export default function UserManagement() {
             searchKey="name"
             searchPlaceholder="Search users..."
             emptyMessage="No users found matching your criteria."
-            onRowClick={handleEditUser}
+            onRowClick={handleViewUserDetail}
           />
         </motion.div>
 
         {/* Dialogs */}
+        {showUserDetail && selectedUser && (
+          <UserDetailCard
+            userId={selectedUser.id}
+            open={showUserDetail}
+            onClose={() => setShowUserDetail(false)}
+            onEdit={(userId) => {
+              setShowUserDetail(false);
+              const user = users.find(u => u.id === userId);
+              if (user) {
+                setSelectedUser(user);
+                setShowUserProfile(true);
+              }
+            }}
+          />
+        )}
+
         {showUserProfile && selectedUser && (
           <UserProfileDialog
             user={selectedUser}
@@ -485,7 +503,7 @@ export default function UserManagement() {
             onUsersUpdated={(updatedUsers) => {
               setUsers(prev => prev.map(u => {
                 const updated = updatedUsers.find(uu => uu.id === u.id);
-                return updated ? { ...u, ...updated } : u;
+                return updated ? { ...u, ...updated, department: u.department } : u;
               }));
               setSelectedUsers([]);
             }}
@@ -505,6 +523,8 @@ export default function UserManagement() {
                 email: invitation.email,
                 role: invitation.role,
                 isActive: false,
+                isEmailVerified: false,
+                companyId: invitation.companyId || "",
                 status: "invited",
                 createdAt: invitation.createdAt,
                 updatedAt: invitation.createdAt,

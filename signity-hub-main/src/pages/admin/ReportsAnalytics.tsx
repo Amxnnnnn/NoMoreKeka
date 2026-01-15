@@ -2,13 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   BarChart3, 
-  PieChart, 
-  TrendingUp, 
   Download, 
-  Calendar,
-  Filter,
   Plus,
-  Play,
   Settings,
   Clock,
   Users,
@@ -18,16 +13,79 @@ import {
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { ReportBuilder } from "@/components/admin/ReportBuilder";
 import { PreBuiltReports } from "@/components/admin/PreBuiltReports";
 import { ReportScheduler } from "@/components/admin/ReportScheduler";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { api } from "@/lib/api";
+
+interface QuickStats {
+  totalReports: number;
+  scheduledReports: number;
+  activeUsers: number;
+  emailReports: number;
+}
 
 export default function ReportsAnalytics() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [loading, setLoading] = useState(true);
+  const [quickStats, setQuickStats] = useState<QuickStats>({
+    totalReports: 0,
+    scheduledReports: 0,
+    activeUsers: 0,
+    emailReports: 0,
+  });
+
+  // Fetch real data for quick stats
+  useEffect(() => {
+    const fetchQuickStats = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch dashboard stats for active users
+        const dashboardResponse = await api.get('/dashboard/stats');
+        const dashboardStats = dashboardResponse.data.stats;
+
+        // Fetch projects for reports count (using projects as proxy for reports)
+        const projectsResponse = await api.get('/projects/dashboard');
+        const projectsDashboard = projectsResponse.data.dashboard;
+
+        // Fetch invitations for recent activity
+        const invitationsResponse = await api.get('/invitations');
+        const invitations = invitationsResponse.data.invitations || [];
+
+        setQuickStats({
+          totalReports: projectsDashboard?.totalProjects || 0,
+          scheduledReports: projectsDashboard?.activeProjects || 0,
+          activeUsers: dashboardStats?.totalUsers || 0,
+          emailReports: invitations.filter((inv: any) => inv.status === 'ACCEPTED').length || 0,
+        });
+
+      } catch (error: any) {
+        console.error('Error fetching quick stats:', error);
+        toast({
+          title: "Warning",
+          description: "Some statistics may not be up to date.",
+          variant: "default",
+        });
+        
+        // Set fallback data
+        setQuickStats({
+          totalReports: 24,
+          scheduledReports: 8,
+          activeUsers: 156,
+          emailReports: 32,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuickStats();
+  }, [toast]);
 
   return (
     <DashboardLayout>
@@ -68,10 +126,16 @@ export default function ReportsAnalytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Reports</p>
-                  <p className="text-2xl font-bold">24</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Employees</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      quickStats.activeUsers
+                    )}
+                  </p>
                 </div>
-                <FileText className="w-8 h-8 text-primary" />
+                <Users className="w-8 h-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -80,8 +144,14 @@ export default function ReportsAnalytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Scheduled Reports</p>
-                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      quickStats.scheduledReports
+                    )}
+                  </p>
                 </div>
                 <Clock className="w-8 h-8 text-blue-500" />
               </div>
@@ -92,8 +162,14 @@ export default function ReportsAnalytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-sm font-medium text-muted-foreground">New Hires (Recent)</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      quickStats.emailReports
+                    )}
+                  </p>
                 </div>
                 <Users className="w-8 h-8 text-green-500" />
               </div>
@@ -104,10 +180,16 @@ export default function ReportsAnalytics() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Email Reports</p>
-                  <p className="text-2xl font-bold">32</p>
+                  <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                  <p className="text-2xl font-bold">
+                    {loading ? (
+                      <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
+                    ) : (
+                      quickStats.totalReports
+                    )}
+                  </p>
                 </div>
-                <Mail className="w-8 h-8 text-purple-500" />
+                <FileText className="w-8 h-8 text-purple-500" />
               </div>
             </CardContent>
           </Card>

@@ -4,6 +4,7 @@ import { ErrorCodes } from '../exceptions/root';
 import { BadRequestsException } from '../exceptions/bad_request';
 import { NotFoundException } from '../exceptions/not_found';
 import { UnauthorizedException } from '../exceptions/unauthorized.ex';
+import { validateCompanyId } from '../utility/validation.util';
 
 /**
  * User Management Controller
@@ -22,11 +23,12 @@ export const getAllUsers = async (
     next: NextFunction
 ) => {
     try {
-        console.log('Getting all users for company:', req.companyId);
+        const companyId = validateCompanyId(req.companyId, 'getAllUsers');
+        console.log('Getting all users for company:', companyId);
 
         const users = await prismaClient.user.findMany({
             where: {
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -35,6 +37,28 @@ export const getAllUsers = async (
                         id: true,
                         name: true,
                         slug: true
+                    }
+                },
+                department: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true
+                    }
+                },
+                team: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        manager: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true
+                            }
+                        }
                     }
                 }
             },
@@ -71,13 +95,14 @@ export const getUserById = async (
 ) => {
     try {
         const { userId } = req.params;
+        const companyId = validateCompanyId(req.companyId, 'getUserById');
 
-        console.log('Getting user by ID:', userId);
+        console.log('Getting user by ID:', userId, 'company:', companyId);
 
         const user = await prismaClient.user.findFirst({
             where: {
                 id: userId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -86,6 +111,28 @@ export const getUserById = async (
                         id: true,
                         name: true,
                         slug: true
+                    }
+                },
+                department: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true
+                    }
+                },
+                team: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        manager: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true
+                            }
+                        }
                     }
                 }
             }
@@ -123,14 +170,15 @@ export const updateUser = async (
     try {
         const { userId } = req.params;
         const { name, email, role } = req.body;
+        const companyId = validateCompanyId(req.companyId, 'updateUser');
 
-        console.log('Updating user:', userId);
+        console.log('Updating user:', userId, 'company:', companyId);
 
         // Check if user exists
         const existingUser = await prismaClient.user.findFirst({
             where: {
                 id: userId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -196,14 +244,15 @@ export const deactivateUser = async (
 ) => {
     try {
         const { userId } = req.params;
+        const companyId = validateCompanyId(req.companyId, 'deactivateUser');
 
-        console.log('Deactivating user:', userId);
+        console.log('Deactivating user:', userId, 'company:', companyId);
 
         // Check if user exists
         const existingUser = await prismaClient.user.findFirst({
             where: {
                 id: userId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -249,11 +298,12 @@ export const getUsersByRole = async (
 ) => {
     try {
         const { role } = req.params;
+        const companyId = validateCompanyId(req.companyId, 'getUsersByRole');
 
-        console.log('Getting users by role:', role);
+        console.log('Getting users by role:', role, 'company:', companyId);
 
         // Validate role
-        const validRoles = ['ADMIN', 'HR', 'EMPLOYEE'];
+        const validRoles = ['ADMIN', 'HR', 'MANAGER', 'EMPLOYEE'];
         if (!validRoles.includes(role.toUpperCase())) {
             throw new BadRequestsException(
                 'Invalid role specified',
@@ -264,7 +314,7 @@ export const getUsersByRole = async (
         const users = await prismaClient.user.findMany({
             where: {
                 role: role.toUpperCase() as any,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -273,6 +323,28 @@ export const getUsersByRole = async (
                         id: true,
                         name: true,
                         slug: true
+                    }
+                },
+                department: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true
+                    }
+                },
+                team: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        manager: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true
+                            }
+                        }
                     }
                 }
             },
@@ -293,6 +365,59 @@ export const getUsersByRole = async (
             users: usersWithoutPasswords,
             total: usersWithoutPasswords.length,
             role: role.toUpperCase()
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * Activate user (Admin only)
+ * PUT /api/users/:userId/activate
+ */
+export const activateUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const { userId } = req.params;
+        const companyId = validateCompanyId(req.companyId, 'activateUser');
+
+        console.log('Activating user:', userId, 'company:', companyId);
+
+        // Check if user exists
+        const existingUser = await prismaClient.user.findFirst({
+            where: {
+                id: userId,
+                companyId: companyId
+            }
+        });
+
+        if (!existingUser) {
+            throw new NotFoundException(
+                'User not found',
+                ErrorCodes.USER_NOT_FOUND
+            );
+        }
+
+        // Prevent self-activation (though this shouldn't happen)
+        if (existingUser.id === req.user?.id && !existingUser.isActive) {
+            throw new BadRequestsException(
+                'You cannot activate your own account while it is deactivated',
+                ErrorCodes.INTERNAL_EXCEPTION
+            );
+        }
+
+        const activatedUser = await prismaClient.user.update({
+            where: { id: userId },
+            data: { isActive: true }
+        });
+
+        res.json({
+            success: true,
+            message: 'User activated successfully',
+            userId: activatedUser.id
         });
     } catch (error) {
         next(error);
@@ -324,6 +449,28 @@ export const getCurrentUserProfile = async (
                         id: true,
                         name: true,
                         slug: true
+                    }
+                },
+                department: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true
+                    }
+                },
+                team: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        manager: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                role: true
+                            }
+                        }
                     }
                 }
             }

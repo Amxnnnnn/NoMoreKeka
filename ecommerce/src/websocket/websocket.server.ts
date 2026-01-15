@@ -79,7 +79,7 @@ export class WebSocketServer {
 
   private setupEventHandlers() {
     this.io.on('connection', (socket: AuthenticatedSocket) => {
-      console.log(`🔌 User ${socket.userId} connected via WebSocket`);
+      console.log(`User ${socket.userId} connected via WebSocket`);
       
       // Store connection
       if (socket.userId) {
@@ -98,7 +98,7 @@ export class WebSocketServer {
 
       // Handle disconnection
       socket.on('disconnect', () => {
-        console.log(`🔌 User ${socket.userId} disconnected`);
+        console.log(`User ${socket.userId} disconnected`);
         if (socket.userId) {
           this.connectedUsers.delete(socket.userId);
         }
@@ -113,14 +113,14 @@ export class WebSocketServer {
       socket.on('subscribe:notifications', () => {
         if (socket.userId) {
           socket.join(`notifications:${socket.userId}`);
-          console.log(`📢 User ${socket.userId} subscribed to notifications`);
+          console.log(`User ${socket.userId} subscribed to notifications`);
         }
       });
 
       socket.on('unsubscribe:notifications', () => {
         if (socket.userId) {
           socket.leave(`notifications:${socket.userId}`);
-          console.log(`📢 User ${socket.userId} unsubscribed from notifications`);
+          console.log(`User ${socket.userId} unsubscribed from notifications`);
         }
       });
 
@@ -128,7 +128,7 @@ export class WebSocketServer {
       socket.on('subscribe:worklog', () => {
         if (socket.userId) {
           socket.join(`worklog:${socket.userId}`);
-          console.log(`⏰ User ${socket.userId} subscribed to work log updates`);
+          console.log(` User ${socket.userId} subscribed to work log updates`);
         }
       });
 
@@ -136,7 +136,7 @@ export class WebSocketServer {
       socket.on('subscribe:project', (projectId: string) => {
         if (socket.userId && projectId) {
           socket.join(`project:${projectId}`);
-          console.log(`📋 User ${socket.userId} subscribed to project ${projectId} updates`);
+          console.log(`User ${socket.userId} subscribed to project ${projectId} updates`);
         }
       });
 
@@ -144,7 +144,7 @@ export class WebSocketServer {
       socket.on('subscribe:team', (teamId: string) => {
         if (socket.userId && teamId) {
           socket.join(`team:${teamId}`);
-          console.log(`👥 User ${socket.userId} subscribed to team ${teamId} updates`);
+          console.log(`User ${socket.userId} subscribed to team ${teamId} updates`);
         }
       });
     });

@@ -56,8 +56,9 @@ export const taskQuerySchema = z.object({
     query: z.object({
         status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'COMPLETED', 'CANCELLED']).optional(),
         priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-        projectId: z.string().optional()
-    })
+        projectId: z.string().optional(),
+        assigneeId: z.string().optional()
+    }).optional()
 });
 
 // Type exports

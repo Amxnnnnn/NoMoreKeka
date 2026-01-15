@@ -314,8 +314,17 @@ export const createProject = async (
     try {
         const { name, description, teamId, priority, startDate, endDate, deadline } = req.body;
         const managerId = req.user?.id;
+        const companyId = req.companyId;
 
-        console.log('Creating project:', name, 'by manager:', managerId);
+        console.log('Creating project:', name, 'by manager:', managerId, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Check permissions
         if (!['MANAGER', 'HR', 'ADMIN'].includes(req.user?.role || '')) {
@@ -329,7 +338,7 @@ export const createProject = async (
         const team = await prismaClient.team.findFirst({
             where: {
                 id: teamId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -356,7 +365,7 @@ export const createProject = async (
                 description: description,
                 teamId: teamId,
                 managerId: managerId!,
-                companyId: req.companyId!,
+                companyId: companyId,
                 priority: priority || 'MEDIUM',
                 startDate: startDate ? new Date(startDate) : null,
                 endDate: endDate ? new Date(endDate) : null,

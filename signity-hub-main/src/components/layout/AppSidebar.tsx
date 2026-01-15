@@ -58,34 +58,46 @@ export function AppSidebar() {
       case 'ADMIN':
         return [
           { title: "Dashboard", icon: LayoutDashboard, href: "/admin/dashboard" },
+          { title: "User Management", icon: Users, href: "/admin/users" },
           { title: "Members", icon: Users, href: "/admin/members" },
           { title: "Invite Members", icon: UserPlus, href: "/admin/invite" },
-          { title: "Departments", icon: Building2, href: "/admin/departments", disabled: true },
-          { title: "Settings", icon: Settings, href: "/admin/settings", disabled: true },
+          { title: "Departments", icon: Building2, href: "/admin/departments" },
+          { title: "Projects", icon: FolderOpen, href: "/admin/projects" },
+          { title: "Teams", icon: Users, href: "/admin/teams" },
+          { title: "Reports", icon: Settings, href: "/admin/reports" },
+          { title: "Settings", icon: Settings, href: "/admin/settings" },
         ];
       
       case 'HR':
         return [
           { title: "Dashboard", icon: LayoutDashboard, href: "/hr/dashboard" },
+          { title: "User Management", icon: Users, href: "/hr/users" },
           { title: "Employees", icon: Users, href: "/hr/members" },
           { title: "Invite Employee", icon: UserPlus, href: "/hr/invite" },
-          { title: "Departments", icon: Building2, href: "/hr/departments", disabled: true },
+          { title: "Projects", icon: FolderOpen, href: "/hr/projects" },
+          { title: "Teams", icon: Users, href: "/hr/teams" },
+          { title: "Reports", icon: Settings, href: "/hr/reports" },
         ];
       
       case 'MANAGER':
         return [
           { title: "Dashboard", icon: LayoutDashboard, href: "/manager/dashboard" },
-          { title: "My Team", icon: Users, href: "/manager/team", disabled: true },
-          { title: "Projects", icon: FolderOpen, href: "/manager/projects", disabled: true },
-          { title: "Tasks", icon: Target, href: "/manager/tasks", disabled: true },
+          { title: "My Team", icon: Users, href: "/manager/team" },
+          { title: "Projects", icon: FolderOpen, href: "/manager/projects" },
+          { title: "Tasks", icon: Target, href: "/manager/tasks" },
+          { title: "Leave Approval", icon: Calendar, href: "/leave/approval" },
+          { title: "Work Logs", icon: Calendar, href: "/worklog" },
         ];
       
       case 'EMPLOYEE':
       default:
         return [
           { title: "Dashboard", icon: LayoutDashboard, href: "/employee/dashboard" },
-          { title: "My Tasks", icon: Target, href: "/employee/tasks", disabled: true },
-          { title: "Calendar", icon: Calendar, href: "/employee/calendar", disabled: true },
+          { title: "Projects", icon: FolderOpen, href: "/projects" },
+          { title: "Teams", icon: Users, href: "/teams" },
+          { title: "Leave Apply", icon: Calendar, href: "/leave/apply" },
+          { title: "Leave History", icon: Calendar, href: "/leave/history" },
+          { title: "Work Logs", icon: Target, href: "/worklog" },
         ];
     }
   };

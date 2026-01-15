@@ -81,3 +81,12 @@ export const getDepartmentUsers = async (departmentId: string): Promise<Departme
   const response = await api.get(`/departments/${departmentId}/users`);
   return response.data;
 };
+
+// Export as a service object for easier importing
+export const departmentService = {
+  getAllDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+  getDepartmentUsers
+};

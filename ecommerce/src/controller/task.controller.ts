@@ -26,15 +26,24 @@ export const getTasks = async (
     try {
         const userId = req.user?.id;
         const userRole = req.user?.role;
+        const companyId = req.companyId;
         const { status, priority, projectId, assigneeId } = req.query;
 
-        console.log('Getting tasks for user:', userId, 'role:', userRole);
+        console.log('Getting tasks for user:', userId, 'role:', userRole, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Build where clause based on role
         let whereClause: any = {
             isActive: true,
             project: {
-                companyId: req.companyId
+                companyId: companyId
             }
         };
 
@@ -103,7 +112,7 @@ export const getTasks = async (
                 },
                 _count: {
                     select: {
-                        comments: {
+                        taskComments: {
                             where: { isActive: true }
                         }
                     }
@@ -121,7 +130,7 @@ export const getTasks = async (
             message: 'Tasks retrieved successfully',
             data: tasks.map(task => ({
                 ...task,
-                commentCount: task._count.comments,
+                commentCount: task._count.taskComments,
                 isOverdue: task.dueDate && new Date() > task.dueDate && task.status !== 'COMPLETED'
             }))
         });
@@ -184,7 +193,7 @@ export const getAssignedTasks = async (
                 },
                 _count: {
                     select: {
-                        comments: {
+                        taskComments: {
                             where: { isActive: true }
                         }
                     }
@@ -202,7 +211,7 @@ export const getAssignedTasks = async (
             message: 'Assigned tasks retrieved successfully',
             tasks: tasks.map(task => ({
                 ...task,
-                commentCount: task._count.comments,
+                commentCount: task._count.taskComments,
                 isOverdue: task.dueDate && new Date() > task.dueDate && task.status !== 'COMPLETED'
             }))
         });
@@ -458,8 +467,9 @@ export const createTask = async (
     try {
         const { title, description, projectId, assigneeId, priority, dueDate, estimatedHours } = req.body;
         const createdById = req.user?.id;
+        const companyId = req.companyId;
 
-        console.log('Creating task:', title);
+        console.log('Creating task:', title, 'for company:', companyId);
 
         // Check permissions
         if (!['MANAGER', 'HR', 'ADMIN'].includes(req.user?.role || '')) {
@@ -469,11 +479,19 @@ export const createTask = async (
             );
         }
 
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
+
         // Validate project exists
         const project = await prismaClient.project.findFirst({
             where: {
                 id: projectId,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             },
             include: {
@@ -674,10 +692,11 @@ export const getTeamTasks = async (
 ) => {
     try {
         const managerId = req.user?.id;
+        const companyId = req.companyId;
         const status = req.query.status as string;
         const projectId = req.query.projectId as string;
 
-        console.log('Getting team tasks for manager:', managerId);
+        console.log('Getting team tasks for manager:', managerId, 'company:', companyId);
 
         // Check permissions
         if (!['MANAGER', 'HR', 'ADMIN'].includes(req.user?.role || '')) {
@@ -687,11 +706,19 @@ export const getTeamTasks = async (
             );
         }
 
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
+
         // Build where clause
         const whereClause: any = {
             isActive: true,
             project: {
-                companyId: req.companyId
+                companyId: companyId
             }
         };
 
@@ -738,7 +765,7 @@ export const getTeamTasks = async (
                 },
                 _count: {
                     select: {
-                        comments: {
+                        taskComments: {
                             where: { isActive: true }
                         }
                     }
@@ -756,7 +783,7 @@ export const getTeamTasks = async (
             message: 'Team tasks retrieved successfully',
             tasks: tasks.map(task => ({
                 ...task,
-                commentCount: task._count.comments,
+                commentCount: task._count.taskComments,
                 isOverdue: task.dueDate && new Date() > task.dueDate && task.status !== 'COMPLETED'
             }))
         });

@@ -11,6 +11,7 @@ import {
     rejectLeave
 } from '../controller/leave.controller';
 import { authMiddleware } from '../middleware/auth.mid';
+import { companyIsolationMiddleware } from '../middleware/admin.mid';
 import { validate } from '../middleware/validate.mid';
 import { errorHandler } from '../error-handler.validator';
 import { 
@@ -20,6 +21,10 @@ import {
 } from '../validator/leave.validator';
 
 const leaveRoutes: Router = Router();
+
+// Apply global middleware for all routes
+leaveRoutes.use(authMiddleware);
+leaveRoutes.use(companyIsolationMiddleware);
 
 /**
  * @swagger
@@ -54,7 +59,7 @@ const leaveRoutes: Router = Router();
  *                   items:
  *                     type: object
  */
-leaveRoutes.get('/balance', authMiddleware, errorHandler(getLeaveBalance));
+leaveRoutes.get('/balance', errorHandler(getLeaveBalance));
 
 /**
  * @swagger
@@ -94,7 +99,7 @@ leaveRoutes.get('/balance', authMiddleware, errorHandler(getLeaveBalance));
  *       200:
  *         description: Leave application submitted successfully
  */
-leaveRoutes.post('/apply', authMiddleware, validate(applyLeaveSchema), errorHandler(applyLeave));
+leaveRoutes.post('/apply', validate(applyLeaveSchema), errorHandler(applyLeave));
 
 /**
  * @swagger
@@ -125,7 +130,7 @@ leaveRoutes.post('/apply', authMiddleware, validate(applyLeaveSchema), errorHand
  *       200:
  *         description: Leave history retrieved successfully
  */
-leaveRoutes.get('/history', authMiddleware, errorHandler(getLeaveHistory));
+leaveRoutes.get('/history', errorHandler(getLeaveHistory));
 
 /**
  * @swagger
@@ -159,7 +164,7 @@ leaveRoutes.get('/history', authMiddleware, errorHandler(getLeaveHistory));
  *                     cancelled:
  *                       type: integer
  */
-leaveRoutes.get('/status', authMiddleware, errorHandler(getLeaveStatus));
+leaveRoutes.get('/status', errorHandler(getLeaveStatus));
 
 /**
  * @swagger
@@ -180,7 +185,7 @@ leaveRoutes.get('/status', authMiddleware, errorHandler(getLeaveStatus));
  *       200:
  *         description: Team leave requests retrieved successfully
  */
-leaveRoutes.get('/team', authMiddleware, errorHandler(getTeamLeaveRequests));
+leaveRoutes.get('/team', errorHandler(getTeamLeaveRequests));
 
 /**
  * @swagger
@@ -210,7 +215,7 @@ leaveRoutes.get('/team', authMiddleware, errorHandler(getTeamLeaveRequests));
  *       200:
  *         description: Leave approved successfully
  */
-leaveRoutes.put('/:leaveId/approve', authMiddleware, validate(leaveIdParamSchema), validate(leaveApprovalSchema), errorHandler(approveLeave));
+leaveRoutes.put('/:leaveId/approve', validate(leaveIdParamSchema), validate(leaveApprovalSchema), errorHandler(approveLeave));
 
 /**
  * @swagger
@@ -240,7 +245,7 @@ leaveRoutes.put('/:leaveId/approve', authMiddleware, validate(leaveIdParamSchema
  *       200:
  *         description: Leave rejected successfully
  */
-leaveRoutes.put('/:leaveId/reject', authMiddleware, validate(leaveIdParamSchema), validate(leaveApprovalSchema), errorHandler(rejectLeave));
+leaveRoutes.put('/:leaveId/reject', validate(leaveIdParamSchema), validate(leaveApprovalSchema), errorHandler(rejectLeave));
 
 /**
  * @swagger
@@ -272,7 +277,7 @@ leaveRoutes.put('/:leaveId/reject', authMiddleware, validate(leaveIdParamSchema)
  *       200:
  *         description: Upcoming leaves retrieved successfully
  */
-leaveRoutes.get('/upcoming', authMiddleware, errorHandler(getUpcomingLeaves));
+leaveRoutes.get('/upcoming', errorHandler(getUpcomingLeaves));
 
 /**
  * @swagger
@@ -309,6 +314,6 @@ leaveRoutes.get('/upcoming', authMiddleware, errorHandler(getUpcomingLeaves));
  *       200:
  *         description: Leave processed successfully
  */
-leaveRoutes.put('/:leaveId/process', authMiddleware, validate(leaveIdParamSchema), errorHandler(processLeaveRequest));
+leaveRoutes.put('/:leaveId/process', validate(leaveIdParamSchema), errorHandler(processLeaveRequest));
 
 export default leaveRoutes;

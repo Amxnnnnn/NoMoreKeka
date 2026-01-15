@@ -4,6 +4,7 @@ import {
     getUserById,
     updateUser,
     deactivateUser,
+    activateUser,
     getUsersByRole,
     getCurrentUserProfile
 } from '../controller/user.controller';
@@ -256,5 +257,41 @@ userRoutes.put('/:userId', validate(userIdParamSchema), validate(updateUserSchem
  *         description: User not found
  */
 userRoutes.delete('/:userId', validate(userIdParamSchema), adminMiddleware, errorHandler(deactivateUser));
+
+/**
+ * @swagger
+ * /api/users/{userId}/activate:
+ *   put:
+ *     summary: Activate user (Admin only)
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User activated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 userId:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized - Admin access required
+ *       404:
+ *         description: User not found
+ */
+userRoutes.put('/:userId/activate', validate(userIdParamSchema), adminMiddleware, errorHandler(activateUser));
 
 export default userRoutes;

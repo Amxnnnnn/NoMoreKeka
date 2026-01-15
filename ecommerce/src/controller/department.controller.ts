@@ -3,6 +3,7 @@ import { prismaClient } from '../index.validator';
 import { ErrorCodes } from '../exceptions/root';
 import { BadRequestsException } from '../exceptions/bad_request';
 import { NotFoundException } from '../exceptions/not_found';
+import { UnauthorizedException } from '../exceptions/unauthorized.ex';
 
 /**
  * Department Management Controller
@@ -73,14 +74,23 @@ export const createDepartment = async (
 ) => {
     try {
         const { name, description } = req.body;
+        const companyId = req.companyId;
 
-        console.log('Creating department:', name);
+        console.log('Creating department:', name, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Check if department already exists
         const existingDepartment = await prismaClient.department.findFirst({
             where: {
                 name,
-                companyId: req.companyId,
+                companyId: companyId,
                 isActive: true
             }
         });
@@ -96,7 +106,7 @@ export const createDepartment = async (
             data: {
                 name,
                 description,
-                companyId: req.companyId!
+                companyId: companyId
             },
             include: {
                 _count: {

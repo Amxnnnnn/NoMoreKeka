@@ -10,6 +10,7 @@ import {
     getWorkLogReports
 } from '../controller/worklog.controller';
 import { authMiddleware } from '../middleware/auth.mid';
+import { companyIsolationMiddleware } from '../middleware/admin.mid';
 import { validate } from '../middleware/validate.mid';
 import { errorHandler } from '../error-handler.validator';
 import { 
@@ -19,6 +20,10 @@ import {
 } from '../validator/worklog.validator';
 
 const workLogRoutes: Router = Router();
+
+// Apply global middleware for all routes
+workLogRoutes.use(authMiddleware);
+workLogRoutes.use(companyIsolationMiddleware);
 
 /**
  * @swagger
@@ -58,7 +63,7 @@ const workLogRoutes: Router = Router();
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-workLogRoutes.post('/', authMiddleware, validate(logWorkSchema), errorHandler(logWork));
+workLogRoutes.post('/', validate(logWorkSchema), errorHandler(logWork));
 
 /**
  * @swagger
@@ -124,7 +129,7 @@ workLogRoutes.post('/', authMiddleware, validate(logWorkSchema), errorHandler(lo
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-workLogRoutes.get('/', authMiddleware, errorHandler(getWorkLogs));
+workLogRoutes.get('/', errorHandler(getWorkLogs));
 
 /**
  * @swagger
@@ -167,7 +172,7 @@ workLogRoutes.get('/', authMiddleware, errorHandler(getWorkLogs));
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-workLogRoutes.get('/summary', authMiddleware, errorHandler(getWorkLogSummary));
+workLogRoutes.get('/summary', errorHandler(getWorkLogSummary));
 
 /**
  * @swagger
@@ -226,7 +231,7 @@ workLogRoutes.get('/summary', authMiddleware, errorHandler(getWorkLogSummary));
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-workLogRoutes.get('/team', authMiddleware, errorHandler(getTeamWorkLogs));
+workLogRoutes.get('/team', errorHandler(getTeamWorkLogs));
 
 /**
  * @swagger
@@ -276,7 +281,7 @@ workLogRoutes.get('/team', authMiddleware, errorHandler(getTeamWorkLogs));
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-workLogRoutes.get('/reports', authMiddleware, errorHandler(getWorkLogReports));
+workLogRoutes.get('/reports', errorHandler(getWorkLogReports));
 
 /**
  * @swagger
@@ -323,7 +328,7 @@ workLogRoutes.get('/reports', authMiddleware, errorHandler(getWorkLogReports));
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-workLogRoutes.put('/:workLogId', authMiddleware, validate(workLogIdParamSchema), validate(updateWorkLogSchema), errorHandler(updateWorkLog));
+workLogRoutes.put('/:workLogId', validate(workLogIdParamSchema), validate(updateWorkLogSchema), errorHandler(updateWorkLog));
 
 /**
  * @swagger
@@ -362,7 +367,7 @@ workLogRoutes.put('/:workLogId', authMiddleware, validate(workLogIdParamSchema),
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-workLogRoutes.delete('/:workLogId', authMiddleware, validate(workLogIdParamSchema), errorHandler(deleteWorkLog));
+workLogRoutes.delete('/:workLogId', validate(workLogIdParamSchema), errorHandler(deleteWorkLog));
 
 /**
  * @swagger
@@ -405,6 +410,6 @@ workLogRoutes.delete('/:workLogId', authMiddleware, validate(workLogIdParamSchem
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-workLogRoutes.put('/:workLogId/approve', authMiddleware, validate(workLogIdParamSchema), errorHandler(approveWorkLog));
+workLogRoutes.put('/:workLogId/approve', validate(workLogIdParamSchema), errorHandler(approveWorkLog));
 
 export default workLogRoutes;

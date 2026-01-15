@@ -3,6 +3,7 @@ import { prismaClient } from '../index.validator';
 import { ErrorCodes } from '../exceptions/root';
 import { BadRequestsException } from '../exceptions/bad_request';
 import { NotFoundException } from '../exceptions/not_found';
+import { UnauthorizedException } from '../exceptions/unauthorized.ex';
 import { sendInvitationEmail } from '../utility/email/email.service';
 import { JWT_SECRET } from '../secret.validator';
 import jwt from 'jsonwebtoken';
@@ -26,8 +27,17 @@ export const sendInvitation = async (
     try {
         const { email, name, role, departmentId } = req.body;
         const invitedBy = req.user?.id;
+        const companyId = req.companyId;
 
-        console.log('Sending invitation to:', email);
+        console.log('Sending invitation to:', email, 'company:', companyId);
+
+        // Validate companyId exists
+        if (!companyId) {
+            throw new UnauthorizedException(
+                'Company ID not found',
+                ErrorCodes.UNAUTHORIZED_EXCEPTION
+            );
+        }
 
         // Check if user already exists
         const existingUser = await prismaClient.user.findFirst({
@@ -45,7 +55,7 @@ export const sendInvitation = async (
         const existingInvitation = await prismaClient.invitation.findFirst({
             where: {
                 email,
-                companyId: req.companyId,
+                companyId: companyId,
                 status: 'PENDING'
             }
         });
@@ -62,7 +72,7 @@ export const sendInvitation = async (
             const department = await prismaClient.department.findFirst({
                 where: {
                     id: departmentId,
-                    companyId: req.companyId,
+                    companyId: companyId,
                     isActive: true
                 }
             });
@@ -86,7 +96,7 @@ export const sendInvitation = async (
                 email,
                 name,
                 role,
-                companyId: req.companyId!,
+                companyId: companyId,
                 departmentId,
                 invitedBy: invitedBy!,
                 token,
